@@ -4,12 +4,16 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.nio.ByteOrder;
 
+import static java.lang.Math.*;
+
+
 public class SquareLabels extends JButton {
 
     public int i;
     int j;
     public SquareLabels(ActionListener l,int i,int j){
-        super(""+i+""+j);
+//        super(""+i+""+j);
+        super(""+(int)(max(abs(5-j),abs(5-i))+(min(abs(5-j),abs(5-i))/2)));
         addActionListener(l);
         this.i = i;
         this.j = j;

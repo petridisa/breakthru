@@ -1,5 +1,7 @@
 
 //import javax.swing.*;
+import jdk.swing.interop.SwingInterOpUtils;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -16,6 +18,7 @@ public class Board extends JFrame implements ActionListener {
     String movesString;
     boolean picked;
     JTextArea moves;
+    State s;
 
     boolean goldPlays, startGame;
     
@@ -26,7 +29,7 @@ public class Board extends JFrame implements ActionListener {
         setTitle("Breakthru");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         gridLayout = new GridLayout(11,11);
-        setSize(1000,600);
+        setSize(1000,650);
         panel = new JPanel(gridLayout);
         panel.setBounds(30,30,400,400);
         panel.setVisible(true);
@@ -64,25 +67,79 @@ public class Board extends JFrame implements ActionListener {
         scroll.setBackground(Color.white);
         add(scroll);
 
+        addTimers();
+        addRadioButtons();
+
+        s = new State();
+        loadState(s);
+//        if(checkEndgame(new State())) System.out.println("endgame");
+
+        setDefaultCloseOperation(this.EXIT_ON_CLOSE);
+        setResizable(false);
+        setVisible(true);
 
 
+    }
+
+    private void addRadioButtons() {
+        Component frame = this;
+
+        JLabel chooseTitle = new JLabel("Choose Player");
+        JLabel firstTitle = new JLabel("Which player plays first");
+
+        chooseTitle.setBounds(150,440,200,20);
+        firstTitle.setBounds(150,530,200,20);
+        JRadioButton r1 = new JRadioButton("A) Gold");
+        JRadioButton r2 = new JRadioButton("B) Silver");
+        JRadioButton r3 = new JRadioButton("A) Gold");
+        JRadioButton r4 = new JRadioButton("B) Silver");
+        r1.setBounds(150,460,200,20);
+        r2.setBounds(150,480,200,20);
+        r3.setBounds(150,550,200,20);
+        r4.setBounds(150,570,200,20);
+
+        ButtonGroup bgPLayer = new ButtonGroup();
+        ButtonGroup bgFirst = new ButtonGroup();
+
+        bgPLayer.add(r1);
+        bgPLayer.add(r2);
+        bgFirst.add(r3);
+        bgFirst.add(r4);
+
+        add(r1);add(r2);add(r3);add(r4);
+        add(chooseTitle);add(firstTitle);
+
+        JButton startButton = new JButton("START GAME");
+        startButton.setBounds(350,430,150,80);
+        startButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //Check if radio buttons are selected
+                startGame = true;
+//                player = JOptionPane.showOptionDialog(frame,"Choose which player plays first",
+//                        "First Player",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE,null,new Object[]{"Gold Player","Silver Player"},
+//                        null);
+                player = r3.isSelected()?0:1;
+                startButton.setEnabled(false);
+            }
+        });
+        add(startButton);
+    }
+
+    private void addTimers() {
         long now = System.currentTimeMillis();
         delay = 1000;
         int n = -1;
-
-
-
-
 
 
         //GOLD PLAYER
         {
             Counter counterGold = new Counter(10);
             JLabel goldTLabel = new JLabel(counterGold.toString(), SwingConstants.CENTER);
-            goldTLabel.setBounds(40, 740, 150, 40);
+            goldTLabel.setBounds(30, 480, 110, 20);
             add(goldTLabel);
             JLabel goldTitle = new JLabel("GOLD'S TIMER", SwingConstants.CENTER);
-            goldTitle.setBounds(40,700,150,40);
+            goldTitle.setBounds(30,460,110,20);
             add(goldTitle);
             timerGold = new Timer(delay, new ActionListener() {
                 @Override
@@ -105,10 +162,10 @@ public class Board extends JFrame implements ActionListener {
         {
             Counter counterSilver = new Counter(10);
             JLabel silverTLabel = new JLabel(counterSilver.toString(), SwingConstants.CENTER);
-            silverTLabel.setBounds(40, 830, 150, 40);
+            silverTLabel.setBounds(30, 550, 110, 20);
             add(silverTLabel);
             JLabel silverTitle = new JLabel("SILVER'S TIMER", SwingConstants.CENTER);
-            silverTitle.setBounds(40,790,150,40);
+            silverTitle.setBounds(30,530,110,20);
             add(silverTitle);
             timerSilver = new Timer(delay, new ActionListener() {
                 @Override
@@ -126,56 +183,8 @@ public class Board extends JFrame implements ActionListener {
             });
             timerSilver.start();
         }
-
-        Component frame = this;
-
-        JLabel chooseTitle = new JLabel("Choose Player");
-        JLabel firstTitle = new JLabel("Which player plays first");
-
-        chooseTitle.setBounds(200,700,200,40);
-        firstTitle.setBounds(200,860,200,40);
-        JRadioButton r1 = new JRadioButton("A) Gold");
-        JRadioButton r2 = new JRadioButton("B) Silver");
-        JRadioButton r3 = new JRadioButton("A) Gold");
-        JRadioButton r4 = new JRadioButton("B) Silver");
-        r1.setBounds(200,740,200,40);
-        r2.setBounds(200,780,200,40);
-        r3.setBounds(200,900,200,40);
-        r4.setBounds(200,940,200,40);
-
-        ButtonGroup bgPLayer = new ButtonGroup();
-        ButtonGroup bgFirst = new ButtonGroup();
-
-        bgPLayer.add(r1);
-        bgPLayer.add(r2);
-        bgFirst.add(r3);
-        bgFirst.add(r4);
-
-        add(r1);add(r2);add(r3);add(r4);
-        add(chooseTitle);add(firstTitle);
-
-        JButton startButton = new JButton("START GAME");
-        startButton.setBounds(400,700,200,100);
-        startButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                startGame = true;
-//                player = JOptionPane.showOptionDialog(frame,"Choose which player plays first",
-//                        "First Player",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE,null,new Object[]{"Gold Player","Silver Player"},
-//                        null);
-                startButton.setEnabled(false);
-            }
-        });
-        add(startButton);
-
-
-        loadState(new State());
-        if(checkEndgame(new State())) System.out.println("endgame");
-
-        setDefaultCloseOperation(this.EXIT_ON_CLOSE);
-        setVisible(true);
-
     }
+
     //Put the labels in the board
     public void putLabels(){
         int row = -1,i=0;
@@ -206,41 +215,81 @@ public class Board extends JFrame implements ActionListener {
     }
 
     public boolean checkEndgame(State s){
-        for(int i=0;i<11;i++){
-            if(s.shipsArray[0][i] == 2 || s.shipsArray[i][0] ==2){
-                return true;
-            }
-            if(s.flagCaptured())
-                return true;
-        }
-        return false;
+        return s.endGame();
     }
+
 
     SquareLabels btn,btn2;
     Color pre;
+    int movesRemaining = 2;
     @Override
     public void actionPerformed(ActionEvent ae) {
         if(!picked) {
-            //check if it is the right turn
+
             btn = (SquareLabels) ae.getSource();
-            if(btn.getBackground()==Color.white)
-                JOptionPane.showMessageDialog(this,"You can't move this piece");
+            if(btn.getBackground()==Color.white) {
+                JOptionPane.showMessageDialog(this, "You can't move this piece");
+                return;
+            }else if(notHisTurn(btn.getBackground())) {
+                JOptionPane.showMessageDialog(this, "Not his turn");
+                return;
+            }
             else{
                 pre = btn.getBackground();
                 btn.setBackground(Color.blue);
                 picked = true;
+                return;
 
             }
         }
         else {
-            //check if move is valid
-            btn2 = (SquareLabels) ae.getSource();
-            btn.setBackground(pre);
-            move(btn.i,btn.j,btn2.i,btn2.j);
-            picked = false;
 
+            btn2 = (SquareLabels) ae.getSource();
+
+            if(btn.equals(btn2)){
+                btn.setBackground(pre);
+                picked = false;
+                return;
+            }
+            if(moveValid(btn,btn2)) {
+                btn.setBackground(pre);
+                move(btn.i, btn.j, btn2.i, btn2.j);
+                picked = false;
+            }
+            else if(s.checkCapture(btn.i, btn.j, btn2.i, btn2.j)){
+                    btn.setBackground(pre);
+                    move(btn.i, btn.j, btn2.i, btn2.j);
+                    picked = false;
+                    if(s.flagCaptured()){
+                        JOptionPane.showMessageDialog(this, "GAME OVER");
+                        return;
+
+                    }
+
+
+
+            }
 
         }
+    }
+
+    private boolean notHisTurn(Color background) {
+        //Not silver's turn, silver's piece
+        if(player !=1 && background.equals(Color.lightGray))
+            return true;
+        //Not Gold' turn, gold's piece
+        if(player !=0 && background.equals(Color.YELLOW) || player == 1 && background.equals(gold))
+            return true;
+        return false;
+
+    }
+
+    boolean moveValid(SquareLabels btn, SquareLabels btn2){
+        if(btn.i!=btn2.i && btn.j != btn2.j )
+            return false;
+        if(!s.checkValid(btn.i,btn.j,btn2.i,btn2.j))
+            return false;
+        return true;
     }
 
 
@@ -254,11 +303,26 @@ public class Board extends JFrame implements ActionListener {
         String newMove = chessNotation(si,sj) +" -> "+ chessNotation(di,dj);
         newMove = moves.getText() +System.lineSeparator() + newMove ;
         moves.setText(newMove);
-        //stop the timer
+
+        //stop the timer, The timer stops on lines 146,172
+
         //update state
+        s.update(si,sj,di,dj);
+        //checkEndgames
+
         //turn move
+        movesRemaining--;
+        if(labels[di][dj].getBackground()==gold){
+            movesRemaining--;
+        }
+        if(movesRemaining==0){
+            player = 1-player;
+            movesRemaining=2;
+        }
+
         return true;
     }
+
 
     public String chessNotation(int i,int j){
         String k = "";
@@ -266,6 +330,26 @@ public class Board extends JFrame implements ActionListener {
         k = k+(11-i)+"";
 
         return k;
+    }
+
+    public void restart(){
+        stop(); // if necessary
+        setup(); // set everything to initial state
+        start(); // start game
+    }
+
+    public void stop(){
+        // stop any timers, threads, operations etc.
+    }
+
+    public void setup(){
+        // set to initial state.
+        // something like recreate the deck,
+        // clear hands and table, shuffle, and deal.
+    }
+
+    public void start(){
+        // code to initiate the game.
     }
 
 
