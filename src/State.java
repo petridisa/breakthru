@@ -69,12 +69,10 @@ public class State {
 
     public boolean checkValid(int a, int b, int c, int d) {
        int min,max;
-        System.out.println("a = " + a + ", b = " + b + ", c = " + c + ", d = " + d);
        if(a==c){
            min=Math.min(b,d);
            max=Math.max(b,d);
            for(int j=min;j<=max;j++){
-               System.out.println("a,j="+shipsArray[a][j]);
                if(shipsArray[a][j]!=0 && j!=b)
                    return false;
            }
@@ -83,7 +81,6 @@ public class State {
            min=Math.min(a,c);
            max=Math.max(a,c);
            for(int i=min;i<=max;i++){
-               System.out.println("i,b="+shipsArray[i][b]);
                if(shipsArray[i][b]!=0 && i!=a) {
                    return false;
                }
@@ -109,5 +106,9 @@ public class State {
 
     public boolean flagCaptured() {
         return flag.captured;
+    }
+
+    public boolean isFlag(int i, int j){
+        return shipsArray[i][j] == 2;
     }
 }

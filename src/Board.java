@@ -6,6 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 
 
 public class Board extends JFrame implements ActionListener {
@@ -19,6 +20,7 @@ public class Board extends JFrame implements ActionListener {
     boolean picked;
     JTextArea moves;
     State s;
+    Component frame;
 
     boolean goldPlays, startGame;
     
@@ -34,10 +36,9 @@ public class Board extends JFrame implements ActionListener {
         panel.setBounds(30,30,400,400);
         panel.setVisible(true);
         add(panel);
+        frame = this;
 
 
-//        setSize(Toolkit.getDefaultToolkit().getScreenSize());
-//        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLayout(null);
         setLocationRelativeTo(null);
 
@@ -46,7 +47,19 @@ public class Board extends JFrame implements ActionListener {
         JMenuBar mb = new JMenuBar();
         JMenu menu1 = new JMenu("File");
         JMenuItem m1 = new JMenuItem("New Game");
+        m1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                restart();
+            }
+        });
         JMenuItem m2 = new JMenuItem("Exit");
+        m2.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.dispatchEvent(new WindowEvent((Window) frame, WindowEvent.WINDOW_CLOSING));
+            }
+        });
         menu1.add(m1);menu1.add(m2);
         mb.add(menu1);
         setJMenuBar(mb);
@@ -82,7 +95,6 @@ public class Board extends JFrame implements ActionListener {
     }
 
     private void addRadioButtons() {
-        Component frame = this;
 
         JLabel chooseTitle = new JLabel("Choose Player");
         JLabel firstTitle = new JLabel("Which player plays first");
@@ -233,6 +245,9 @@ public class Board extends JFrame implements ActionListener {
             }else if(notHisTurn(btn.getBackground())) {
                 JOptionPane.showMessageDialog(this, "Not his turn");
                 return;
+            }else if(s.isFlag(btn.i,btn.j)&& movesRemaining!=2){
+                JOptionPane.showMessageDialog(this, "Can't move the flag");
+                return;
             }
             else{
                 pre = btn.getBackground();
@@ -251,13 +266,17 @@ public class Board extends JFrame implements ActionListener {
                 picked = false;
                 return;
             }
-            if(moveValid(btn,btn2)) {
+            if(moveValid(btn,btn2)){
+                System.out.println(movesRemaining);
                 btn.setBackground(pre);
                 move(btn.i, btn.j, btn2.i, btn2.j);
                 picked = false;
+
             }
-            else if(s.checkCapture(btn.i, btn.j, btn2.i, btn2.j)){
+            //Capture
+            else if(s.checkCapture(btn.i, btn.j, btn2.i, btn2.j) && movesRemaining==2){
                     btn.setBackground(pre);
+                    movesRemaining--;
                     move(btn.i, btn.j, btn2.i, btn2.j);
                     picked = false;
                     if(s.flagCaptured()){
@@ -285,6 +304,7 @@ public class Board extends JFrame implements ActionListener {
     }
 
     boolean moveValid(SquareLabels btn, SquareLabels btn2){
+
         if(btn.i!=btn2.i && btn.j != btn2.j )
             return false;
         if(!s.checkValid(btn.i,btn.j,btn2.i,btn2.j))
@@ -313,7 +333,7 @@ public class Board extends JFrame implements ActionListener {
         //turn move
         movesRemaining--;
         if(labels[di][dj].getBackground()==gold){
-            movesRemaining--;
+            movesRemaining = 0;
         }
         if(movesRemaining==0){
             player = 1-player;
@@ -333,19 +353,20 @@ public class Board extends JFrame implements ActionListener {
     }
 
     public void restart(){
-        stop(); // if necessary
-        setup(); // set everything to initial state
-        start(); // start game
+        stop();
+        setup();
+        start();
     }
 
     public void stop(){
-        // stop any timers, threads, operations etc.
+        timerGold.stop();
+        timerSilver.stop();
     }
 
     public void setup(){
-        // set to initial state.
-        // something like recreate the deck,
-        // clear hands and table, shuffle, and deal.
+        s = new State();
+        putLabels();
+        loadState(s);
     }
 
     public void start(){
