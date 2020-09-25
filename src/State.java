@@ -1,7 +1,10 @@
+import static java.lang.Math.*;
+
 public class State {
     int goldShips;
     int silverShips;
     Flag flag;
+    int grade;
 
 
     int[][] shipsArray;
@@ -26,7 +29,8 @@ public class State {
         shipsArray = initialState;
         goldShips = 12;
         silverShips = 20;
-        flag = new Flag(5,5);}
+        flag = new Flag(5,5);
+        grade = 0;}
 
     public State(State pre, Move move){
 
@@ -50,21 +54,26 @@ public class State {
 
     }
 
-    boolean endGame(){
+    char endGame(){
         //Silver wins
         if(flag.captured)
-            return true;
+            return 's';
         //Gold wins
-        if(flag.i==0)
-            return true;
-        if(flag.j==0)
-            return true;
+        if(flag.i==0 || flag.i==10)
+            return 'g';
+        if(flag.j==0 || flag.j ==10)
+            return 'g';
 
-        //Draw
-        //if a player has no moves
+        if(draw())
+            return 'd';
+        return 'o';
 
+    }
+
+    private boolean draw() {
+        //TODO
+        //check if player has no moves
         return false;
-
     }
 
     public boolean checkValid(int a, int b, int c, int d) {
@@ -110,5 +119,43 @@ public class State {
 
     public boolean isFlag(int i, int j){
         return shipsArray[i][j] == 2;
+    }
+
+    public void evaluate(){
+        char end = endGame();
+        if(end == 'g'){
+            grade = 100;
+            return;
+        }
+        if(end == 's'){
+            grade = -100;
+            return;
+        }
+        if(end == 'd'){
+            grade = 0;
+            return;
+        }
+        else{
+            grade =0;
+            grade+=max(abs(flag.i-5),abs(flag.j-5))*20;
+            grade+= goldShips*5;
+            grade-= silverShips*3;
+            if(shipsArray[flag.i-1][flag.j+1]==1)
+                grade+=5;
+            if(shipsArray[flag.i-1][flag.j-1]==1)
+                grade+=5;
+            if(shipsArray[flag.i+1][flag.j+1]==1)
+                grade+=5;
+            if(shipsArray[flag.i+1][flag.j-1]==1)
+                grade+=5;
+            if(shipsArray[flag.i+1][flag.j+1]==-1||shipsArray[flag.i-1][flag.j+1]==-1||shipsArray[flag.i-1][flag.j-1]==-1||shipsArray[flag.i+1][flag.j-1]==-1)
+                grade-=80;
+
+
+        }
+
+    }
+    int getGrade(){
+        return grade;
     }
 }

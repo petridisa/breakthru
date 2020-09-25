@@ -21,6 +21,7 @@ public class Board extends JFrame implements ActionListener {
     JTextArea moves;
     State s;
     Component frame;
+    String winner;
 
     boolean goldPlays, startGame;
     
@@ -37,7 +38,7 @@ public class Board extends JFrame implements ActionListener {
         panel.setVisible(true);
         add(panel);
         frame = this;
-
+        winner = "";
 
         setLayout(null);
         setLocationRelativeTo(null);
@@ -227,7 +228,22 @@ public class Board extends JFrame implements ActionListener {
     }
 
     public boolean checkEndgame(State s){
-        return s.endGame();
+        switch (s.endGame()){
+            case 'g':
+                winner = "Gold";
+                break;
+            case 's':
+                winner = "Silver";
+                break;
+            case'd':
+                winner = "Draw";
+                break;
+            default:
+                return false;
+
+        }
+        return true;
+
     }
 
 
@@ -267,7 +283,6 @@ public class Board extends JFrame implements ActionListener {
                 return;
             }
             if(moveValid(btn,btn2)){
-                System.out.println(movesRemaining);
                 btn.setBackground(pre);
                 move(btn.i, btn.j, btn2.i, btn2.j);
                 picked = false;
@@ -290,6 +305,10 @@ public class Board extends JFrame implements ActionListener {
             }
 
         }
+        if(checkEndgame(s)){
+            JOptionPane.showMessageDialog(this,"The game ended "+winner+" won!");
+            stop();
+        }
     }
 
     private boolean notHisTurn(Color background) {
@@ -297,7 +316,7 @@ public class Board extends JFrame implements ActionListener {
         if(player !=1 && background.equals(Color.lightGray))
             return true;
         //Not Gold' turn, gold's piece
-        if(player !=0 && background.equals(Color.YELLOW) || player == 1 && background.equals(gold))
+        if(player !=0 && background.equals(Color.YELLOW) || player !=0 && background.equals(gold))
             return true;
         return false;
 
@@ -338,6 +357,8 @@ public class Board extends JFrame implements ActionListener {
         if(movesRemaining==0){
             player = 1-player;
             movesRemaining=2;
+            s.evaluate();
+            System.out.println(s.getGrade());
         }
 
         return true;
@@ -361,6 +382,8 @@ public class Board extends JFrame implements ActionListener {
     public void stop(){
         timerGold.stop();
         timerSilver.stop();
+        player = -1;
+        startGame = false;
     }
 
     public void setup(){
