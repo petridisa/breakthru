@@ -13,7 +13,7 @@ public class Board extends JFrame implements ActionListener {
     Container contentPane;
     GridLayout gridLayout;
     JPanel panel, panel2;
-    int delay,player=-1;
+    int delay,player=-1,agentPlayer=-1;
     Timer timerGold, timerSilver;
     Color gold = new Color(212,175,55);
     String movesString;
@@ -44,26 +44,8 @@ public class Board extends JFrame implements ActionListener {
         setLocationRelativeTo(null);
 
         putLabels();
+        setMenu();
 
-        JMenuBar mb = new JMenuBar();
-        JMenu menu1 = new JMenu("File");
-        JMenuItem m1 = new JMenuItem("New Game");
-        m1.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                restart();
-            }
-        });
-        JMenuItem m2 = new JMenuItem("Exit");
-        m2.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                frame.dispatchEvent(new WindowEvent((Window) frame, WindowEvent.WINDOW_CLOSING));
-            }
-        });
-        menu1.add(m1);menu1.add(m2);
-        mb.add(menu1);
-        setJMenuBar(mb);
 
         moves = new JTextArea("Players Moves:");
         moves.setPreferredSize(new Dimension(200,1000));
@@ -93,6 +75,28 @@ public class Board extends JFrame implements ActionListener {
         setVisible(true);
 
 
+    }
+
+    private void setMenu() {
+        JMenuBar mb = new JMenuBar();
+        JMenu menu1 = new JMenu("File");
+        JMenuItem m1 = new JMenuItem("New Game");
+        m1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                restart();
+            }
+        });
+        JMenuItem m2 = new JMenuItem("Exit");
+        m2.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.dispatchEvent(new WindowEvent((Window) frame, WindowEvent.WINDOW_CLOSING));
+            }
+        });
+        menu1.add(m1);menu1.add(m2);
+        mb.add(menu1);
+        setJMenuBar(mb);
     }
 
     private void addRadioButtons() {
@@ -132,11 +136,17 @@ public class Board extends JFrame implements ActionListener {
 //                player = JOptionPane.showOptionDialog(frame,"Choose which player plays first",
 //                        "First Player",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE,null,new Object[]{"Gold Player","Silver Player"},
 //                        null);
+                agentPlayer = r1.isSelected()?0:1;
                 player = r3.isSelected()?0:1;
                 startButton.setEnabled(false);
+                createAgent();
             }
         });
         add(startButton);
+    }
+
+    private void createAgent() {
+        Agent agent = new Agent(agentPlayer);
     }
 
     private void addTimers() {

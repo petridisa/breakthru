@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 import static java.lang.Math.*;
 
 public class State {
@@ -5,6 +7,8 @@ public class State {
     int silverShips;
     Flag flag;
     int grade;
+    ArrayList<Gold> goldPieces;
+    ArrayList<Silver> silverPieces;
 
 
     int[][] shipsArray;
@@ -25,14 +29,37 @@ public class State {
             {0,0,0,0,0,0,0,0,0,0,0}
 
     };
+
+    public State(int[][] shipsArray){
+        this();
+        this.shipsArray = shipsArray;
+    }
     public State(){
         shipsArray = initialState;
         goldShips = 12;
         silverShips = 20;
+        grade = 0;
+        goldPieces = new ArrayList<>(goldShips);
+        silverPieces = new ArrayList<>(silverShips);
+        initialize();
+    }
+
+    void initialize(){
         flag = new Flag(5,5);
-        grade = 0;}
+        for(int i=0; i<11; i++){
+            for(int j=0; j<11;j++){
+                if(shipsArray[i][j] == 1) {
+                    goldPieces.add(new Gold(i, j));
+                }
+                else if(shipsArray[i][j] == -1){
+                    silverPieces.add(new Silver(i,j));
+                }
+            }
+        }
+    }
 
     public State(State pre, Move move){
+
 
     }
 
@@ -41,9 +68,18 @@ public class State {
         if(shipsArray[a][b]==2){
             flag.move(c,d);
         }
-        if(shipsArray[c][d] == 1)
+        else if(shipsArray[a][b] == 1){
+            goldPieces.get(getIndex(a,b,1)).move(c,d);
+        }
+        else if(shipsArray[a][b] == -1){
+            silverPieces.get(0).move(c,d);
+        }
+        if(shipsArray[c][d] == 1) {
+            goldPieces.remove(getIndex(c,d,1));
             goldShips--;
+        }
         else if(shipsArray[c][d] == -1){
+            silverPieces.remove(getIndex(c,d,-1));
             silverShips--;
         }
         else if(shipsArray[c][d] == 2){
@@ -52,6 +88,24 @@ public class State {
         shipsArray[c][d] = shipsArray[a][b];
         shipsArray[a][b] = 0;
 
+    }
+
+    private int getIndex(int a, int b, int i) {
+        if(i==1){
+            for(Gold g:goldPieces){
+                if(g.i == a && g.j == b){
+                    return goldPieces.indexOf(g);
+                }
+            }
+        }
+        if(i==-1){
+            for(Silver s:silverPieces){
+                if(s.i == a && s.j == b){
+                    return silverPieces.indexOf(s);
+                }
+            }
+        }
+        return -1;
     }
 
     char endGame(){
@@ -131,12 +185,11 @@ public class State {
             grade = -100;
             return;
         }
+        grade = 0;
         if(end == 'd'){
-            grade = 0;
             return;
         }
         else{
-            grade =0;
             grade+=max(abs(flag.i-5),abs(flag.j-5))*20;
             grade+= goldShips*5;
             grade-= silverShips*3;

@@ -2,9 +2,10 @@ import java.security.AlgorithmParameterGenerator;
 
 public class Agent {
 
-    //g if Gold, s if Silver
-    char player;
-    Agent(){
+    //0 if Gold, 1 if Silver
+    int player;
+    Agent(int player){
+        this.player = player;
 
     }
 
@@ -14,9 +15,21 @@ public class Agent {
 
     void play(){
         //find all moves
+        expandStates();
         //find best move
+        findBestState();
         //play the best move
+        playState();
 
+    }
+
+    private void playState() {
+    }
+
+    private void findBestState() {
+    }
+
+    private void expandStates() {
     }
 
 
