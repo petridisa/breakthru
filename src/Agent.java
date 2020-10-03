@@ -1,11 +1,19 @@
 import java.security.AlgorithmParameterGenerator;
+import java.util.ArrayList;
 
 public class Agent {
 
-    //0 if Gold, 1 if Silver
+    //1 if Gold, -1 if Silver
     int player;
-    Agent(int player){
+    State state;
+
+    Agent(int player,State state){
         this.player = player;
+        this.state = state;
+        if(player ==1)
+            System.out.println("Agent plays gold");
+        else if(player==-1)
+            System.out.println("Agent plays silver");
 
     }
 
@@ -14,6 +22,7 @@ public class Agent {
     }
 
     void play(){
+        System.out.println("Agent" + player + "plays");
         //find all moves
         expandStates();
         //find best move
@@ -30,6 +39,11 @@ public class Agent {
     }
 
     private void expandStates() {
+        System.out.println("Agent expand states");
+//        ArrayList<Move> moves = state.expand(player);
+//        System.out.println("Agent has "+moves.size()+" moves");
+
+
     }
 
 

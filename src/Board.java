@@ -22,6 +22,7 @@ public class Board extends JFrame implements ActionListener {
     State s;
     Component frame;
     String winner;
+    Agent agent;
 
     boolean goldPlays, startGame;
     
@@ -136,7 +137,10 @@ public class Board extends JFrame implements ActionListener {
 //                player = JOptionPane.showOptionDialog(frame,"Choose which player plays first",
 //                        "First Player",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE,null,new Object[]{"Gold Player","Silver Player"},
 //                        null);
-                agentPlayer = r1.isSelected()?0:1;
+                if(r1.isSelected())
+                    agentPlayer = 1;
+                else if(r2.isSelected())
+                    agentPlayer = -1;
                 player = r3.isSelected()?0:1;
                 startButton.setEnabled(false);
                 createAgent();
@@ -146,7 +150,8 @@ public class Board extends JFrame implements ActionListener {
     }
 
     private void createAgent() {
-        Agent agent = new Agent(agentPlayer);
+        agent = new Agent(agentPlayer,s);
+
     }
 
     private void addTimers() {
@@ -300,15 +305,16 @@ public class Board extends JFrame implements ActionListener {
             }
             //Capture
             else if(s.checkCapture(btn.i, btn.j, btn2.i, btn2.j) && movesRemaining==2){
-                    btn.setBackground(pre);
-                    movesRemaining--;
-                    move(btn.i, btn.j, btn2.i, btn2.j);
-                    picked = false;
-                    if(s.flagCaptured()){
-                        JOptionPane.showMessageDialog(this, "GAME OVER");
-                        return;
+                btn.setBackground(pre);
+                movesRemaining--;
+                move(btn.i, btn.j, btn2.i, btn2.j);
 
-                    }
+                picked = false;
+                if(s.flagCaptured()){
+                    JOptionPane.showMessageDialog(this, "GAME OVER");
+                    return;
+
+                }
 
 
 
@@ -344,12 +350,17 @@ public class Board extends JFrame implements ActionListener {
 
     public boolean move(int si, int sj, int di, int dj){
 
+        //Move or Capture
+        String mOc ="Move: ";
+        if(Math.abs(sj-dj)==1 && Math.abs(si-di)==1){
+            mOc = "Capture: ";
+        }
         //show the move on GUI
         labels[di][dj].setBackground(labels[si][sj].getBackground());
         btn.setBackground(Color.white);
 
         //display the move on scroll
-        String newMove = chessNotation(si,sj) +" -> "+ chessNotation(di,dj);
+        String newMove = mOc + chessNotation(si,sj) +" -> "+ chessNotation(di,dj);
         newMove = moves.getText() +System.lineSeparator() + newMove ;
         moves.setText(newMove);
 
@@ -366,6 +377,7 @@ public class Board extends JFrame implements ActionListener {
         }
         if(movesRemaining==0){
             player = 1-player;
+            agent.play();
             movesRemaining=2;
             s.evaluate();
             System.out.println(s.getGrade());

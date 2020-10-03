@@ -34,6 +34,7 @@ public class State {
         this();
         this.shipsArray = shipsArray;
     }
+
     public State(){
         shipsArray = initialState;
         goldShips = 12;
@@ -58,13 +59,9 @@ public class State {
         }
     }
 
-    public State(State pre, Move move){
-
-
-    }
-
-
     public void update(int a, int b, int c, int d){
+
+        System.out.println("i"+a+" j"+ b+" i"+ c+" j"+ d);
         if(shipsArray[a][b]==2){
             flag.move(c,d);
         }
@@ -79,6 +76,7 @@ public class State {
             goldShips--;
         }
         else if(shipsArray[c][d] == -1){
+            System.out.println("a = " + a + ", b = " + b + ", c = " + c + ", d = " + d);
             silverPieces.remove(getIndex(c,d,-1));
             silverShips--;
         }
@@ -100,6 +98,7 @@ public class State {
         }
         if(i==-1){
             for(Silver s:silverPieces){
+                System.out.println(s);
                 if(s.i == a && s.j == b){
                     return silverPieces.indexOf(s);
                 }
@@ -178,11 +177,11 @@ public class State {
     public void evaluate(){
         char end = endGame();
         if(end == 'g'){
-            grade = 100;
+            grade = 200;
             return;
         }
         if(end == 's'){
-            grade = -100;
+            grade = -200;
             return;
         }
         grade = 0;
@@ -203,12 +202,136 @@ public class State {
                 grade+=5;
             if(shipsArray[flag.i+1][flag.j+1]==-1||shipsArray[flag.i-1][flag.j+1]==-1||shipsArray[flag.i-1][flag.j-1]==-1||shipsArray[flag.i+1][flag.j-1]==-1)
                 grade-=80;
+            if(flagHasPath()){
+                System.out.println("Flag has path!");
+                grade+=80;
+            }
+
+
 
 
         }
 
     }
+
     int getGrade(){
         return grade;
     }
+
+    public ArrayList<Move> expand(int player){
+
+        ArrayList<Move> moves = new ArrayList<>();
+        System.out.println(moves.size());
+        if(player == 1){
+            //Expand flag moves
+            moves.addAll(pieceMoves(flag.i,flag.j));
+            for(Gold g: goldPieces){
+                moves.addAll(pieceMoves(g.i,g.j));
+            }
+        }
+        else if(player == -1){
+            for(Silver s: silverPieces){
+                moves.addAll(pieceMoves(s.i,s.j));
+            }
+        }
+
+        return moves;
+    }
+    ArrayList<Move> pieceMoves(int pi, int pj){
+        ArrayList<Move> moves = new ArrayList<>();
+
+//        Can move on up
+        for(int i=pi-1;i>=0;i--){
+            if(shipsArray[i][pj] == 0) {
+                moves.add(new Move(this,new Cell(pi,pj),new Cell(i,pj)));
+
+            }else break;
+
+        }
+
+        //Can move on down
+        for(int i=pi+1;i<11;i++){
+            if(shipsArray[i][pj] ==0) {
+                moves.add(new Move(this,new Cell(pi,pj),new Cell(i,pj)));
+            }else break;
+        }
+        //Can move left
+        for(int j=pj-1;j>=0;j--){
+            if(shipsArray[pi][j] ==0) {
+                moves.add(new Move(this,new Cell(pi,pj),new Cell(pi,j)));
+            }else break;
+
+        }
+        //Can move right
+        for(int j=pj+1;j<11;j++){
+            if(shipsArray[pi][j] ==0) {
+                moves.add(new Move(this,new Cell(pi,pj),new Cell(pi,j)));
+            }else break;
+        }
+
+
+        return moves;
+    }
+
+    public boolean flagHasPath(){
+        boolean has = false;
+        //Flag has up path
+        for(int i=flag.i-1;i>=0;i--){
+            if(shipsArray[i][flag.j] != 0) {
+                break;
+            }
+            if(i==0){
+                has = true;
+            }
+        }
+
+        //Flag has down path
+        for(int i=flag.i+1;i<11;i++){
+            if(shipsArray[i][flag.j] != 0) {
+                break;
+            }
+            if(i==10){
+                has = true;
+            }
+        }
+        //Flag has left path
+        for(int j=flag.j-1;j>=0;j--){
+            if(shipsArray[flag.i][j] !=0) {
+                break;
+            }
+            if(j==0){
+                has = true;
+            }
+
+        }
+        //Flag has right path
+        for(int j=flag.j+1;j<11;j++){
+            if(shipsArray[flag.i][j] !=0) {
+                break;
+            }
+            if(j==10){
+                has = true;
+            }
+        }
+
+        return has;
+    }
+
+    public void printArray(){
+        for(int[] i: shipsArray){
+            for(int j: i){
+                System.out.print(j+" ");
+            }
+            System.out.println();
+        }
+    }
+
+    public Object clone() throws
+            CloneNotSupportedException
+    {
+        return super.clone();
+    }
+
 }
+
+
