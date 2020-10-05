@@ -12,18 +12,17 @@ public class SquareLabels extends JButton {
     public int i;
     int j;
     public SquareLabels(ActionListener l,int i,int j){
-//      super();
+      super();
 //        super(""+i+", "+j);
 //        super(""+(int)(5*(max(abs(5-j),abs(5-i))+(min(abs(5-j),abs(5-i))/2))));
 
-        super(""+(int)(20*max(abs(j-5),abs(i-5))));
+//        super(""+(int)(10*max(abs(j-5),abs(i-5))));
         addActionListener(l);
         this.i = i;
         this.j = j;
 
     }
-    void set()
-    {
+    void set(){
         setOpaque(true);
         setBackground(Color.WHITE);
         setSize(1,1);

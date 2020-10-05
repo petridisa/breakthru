@@ -26,7 +26,7 @@ public class Board extends JFrame implements ActionListener {
 
     boolean goldPlays, startGame;
     
-    private SquareLabels[][] labels = new SquareLabels[11][11];
+    static SquareLabels[][] labels = new SquareLabels[11][11];
 
 
     public Board(){
@@ -85,7 +85,7 @@ public class Board extends JFrame implements ActionListener {
         m1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                restart();
+                //TODO new game
             }
         });
         JMenuItem m2 = new JMenuItem("Exit");
@@ -144,14 +144,25 @@ public class Board extends JFrame implements ActionListener {
                 player = r3.isSelected()?0:1;
                 startButton.setEnabled(false);
                 createAgent();
+                System.out.println("player = " + player);
+                System.out.println("agentPlayer = " + agentPlayer);
+                agentPlay();
+
+
             }
         });
         add(startButton);
     }
 
+    private void agentPlay() {
+        if(player == 0 && agentPlayer ==1 || player == 1 && agentPlayer ==-1) {
+            State agentsMove = agent.play();
+        }
+
+    }
+
     private void createAgent() {
         agent = new Agent(agentPlayer,s);
-
     }
 
     private void addTimers() {
@@ -323,7 +334,6 @@ public class Board extends JFrame implements ActionListener {
         }
         if(checkEndgame(s)){
             JOptionPane.showMessageDialog(this,"The game ended "+winner+" won!");
-            stop();
         }
     }
 
@@ -377,10 +387,10 @@ public class Board extends JFrame implements ActionListener {
         }
         if(movesRemaining==0){
             player = 1-player;
-            agent.play();
+            agentPlay();
             movesRemaining=2;
             s.evaluate();
-            System.out.println(s.getGrade());
+//            System.out.println(s.getGrade());
         }
 
         return true;
@@ -395,28 +405,7 @@ public class Board extends JFrame implements ActionListener {
         return k;
     }
 
-    public void restart(){
-        stop();
-        setup();
-        start();
-    }
 
-    public void stop(){
-        timerGold.stop();
-        timerSilver.stop();
-        player = -1;
-        startGame = false;
-    }
-
-    public void setup(){
-        s = new State();
-        putLabels();
-        loadState(s);
-    }
-
-    public void start(){
-        // code to initiate the game.
-    }
 
 
 

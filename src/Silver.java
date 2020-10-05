@@ -1,4 +1,4 @@
-public class Silver extends Ship{
+public class Silver{
 
 
     int i;
@@ -11,6 +11,13 @@ public class Silver extends Ship{
     public void move(int c, int d) {
         i = c;
         j = d;
+    }
+    @Override
+    public String toString() {
+        return "Silver: " +
+                "i=" + i +
+                ", j=" + j +
+                '}';
     }
 
 

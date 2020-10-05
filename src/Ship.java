@@ -17,11 +17,5 @@ public class Ship {
         j = d;
     }
 
-    @Override
-    public String toString() {
-        return "Ship{" + this.getClass() +
-                "i=" + i +
-                ", j=" + j +
-                '}';
-    }
+
 }

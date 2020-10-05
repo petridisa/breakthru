@@ -1,4 +1,4 @@
-public class Gold extends Ship{
+public class Gold{
 
     int i;
     int j;
@@ -9,6 +9,13 @@ public class Gold extends Ship{
     public void move(int c, int d) {
         i = c;
         j = d;
+    }
+    @Override
+    public String toString() {
+        return "Gold: " +
+                "i=" + i +
+                ", j=" + j +
+                '}';
     }
 
 }

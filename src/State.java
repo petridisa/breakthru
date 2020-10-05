@@ -1,4 +1,7 @@
+import jdk.swing.interop.SwingInterOpUtils;
+
 import java.util.ArrayList;
+import java.util.Collection;
 
 import static java.lang.Math.*;
 
@@ -9,6 +12,9 @@ public class State {
     int grade;
     ArrayList<Gold> goldPieces;
     ArrayList<Silver> silverPieces;
+    static int number;
+    int id;
+
 
 
     int[][] shipsArray;
@@ -16,7 +22,8 @@ public class State {
     //-1 is silver
     //1 is gold
     //2 is flag
-    int[][] initialState = new int[][]{{0,0,0,0,0,0,0,0,0,0,0},
+    int[][] initialState = new int[][]{
+            {0,0,0,0,0,0,0,0,0,0,0},
             {0,0,0,-1,-1,-1,-1,-1,0,0,0},
             {0,0,0,0,0,0,0,0,0,0,0},
             {0,-1,0,0,1,1,1,0,0,-1,0},
@@ -34,8 +41,30 @@ public class State {
         this();
         this.shipsArray = shipsArray;
     }
+    public State(State pre, int a, int b, int c, int d){
+        id = number++;
+        shipsArray = new int[11][11];
+        for(int i=0;i<11;i++){
+            for(int j=0;j<11;j++){
+                this.shipsArray[i][j] = pre.shipsArray[i][j];
+            }
+        }
+        this.goldShips = pre.goldShips;
+        this.silverShips = pre.silverShips;
+        this.goldPieces = new ArrayList<>();
+        this.silverPieces = new ArrayList<>();
+        for(Gold g: pre.goldPieces){
+            this.goldPieces.add(new Gold(g.i,g.j));
+        }
+        for(Silver s:pre.silverPieces){
+            this.silverPieces.add(new Silver(s.i,s.j));
+        }
+        flag = new Flag(pre.flag.i,pre.flag.j);
+        this.update(a,b,c,d);
+    }
 
     public State(){
+        id = number++;
         shipsArray = initialState;
         goldShips = 12;
         silverShips = 20;
@@ -44,6 +73,7 @@ public class State {
         silverPieces = new ArrayList<>(silverShips);
         initialize();
     }
+
 
     void initialize(){
         flag = new Flag(5,5);
@@ -61,7 +91,6 @@ public class State {
 
     public void update(int a, int b, int c, int d){
 
-        System.out.println("i"+a+" j"+ b+" i"+ c+" j"+ d);
         if(shipsArray[a][b]==2){
             flag.move(c,d);
         }
@@ -69,14 +98,13 @@ public class State {
             goldPieces.get(getIndex(a,b,1)).move(c,d);
         }
         else if(shipsArray[a][b] == -1){
-            silverPieces.get(0).move(c,d);
+            silverPieces.get(getIndex(a,b,-1)).move(c,d);
         }
         if(shipsArray[c][d] == 1) {
             goldPieces.remove(getIndex(c,d,1));
             goldShips--;
         }
         else if(shipsArray[c][d] == -1){
-            System.out.println("a = " + a + ", b = " + b + ", c = " + c + ", d = " + d);
             silverPieces.remove(getIndex(c,d,-1));
             silverShips--;
         }
@@ -98,7 +126,6 @@ public class State {
         }
         if(i==-1){
             for(Silver s:silverPieces){
-                System.out.println(s);
                 if(s.i == a && s.j == b){
                     return silverPieces.indexOf(s);
                 }
@@ -115,6 +142,8 @@ public class State {
         if(flag.i==0 || flag.i==10)
             return 'g';
         if(flag.j==0 || flag.j ==10)
+            return 'g';
+        if(silverShips==0)
             return 'g';
 
         if(draw())
@@ -189,7 +218,7 @@ public class State {
             return;
         }
         else{
-            grade+=max(abs(flag.i-5),abs(flag.j-5))*20;
+            grade+=max(abs(flag.i-5),abs(flag.j-5))*10;
             grade+= goldShips*5;
             grade-= silverShips*3;
             if(shipsArray[flag.i-1][flag.j+1]==1)
@@ -203,7 +232,6 @@ public class State {
             if(shipsArray[flag.i+1][flag.j+1]==-1||shipsArray[flag.i-1][flag.j+1]==-1||shipsArray[flag.i-1][flag.j-1]==-1||shipsArray[flag.i+1][flag.j-1]==-1)
                 grade-=80;
             if(flagHasPath()){
-                System.out.println("Flag has path!");
                 grade+=80;
             }
 
@@ -218,60 +246,215 @@ public class State {
         return grade;
     }
 
-    public ArrayList<Move> expand(int player){
+    public ArrayList<State> expand(int player){
 
-        ArrayList<Move> moves = new ArrayList<>();
-        System.out.println(moves.size());
+        ArrayList<State> states = new ArrayList<>();
         if(player == 1){
             //Expand flag moves
-            moves.addAll(pieceMoves(flag.i,flag.j));
+            states.addAll(flagMoves(flag.i,flag.j,1));
             for(Gold g: goldPieces){
-                moves.addAll(pieceMoves(g.i,g.j));
+                states.addAll(goldMoves(g.i,g.j,0));
+                break;
+
+
             }
         }
         else if(player == -1){
             for(Silver s: silverPieces){
-                moves.addAll(pieceMoves(s.i,s.j));
+                states.addAll(silverMoves(s.i,s.j,0));
             }
         }
 
-        return moves;
+        return states;
     }
-    ArrayList<Move> pieceMoves(int pi, int pj){
-        ArrayList<Move> moves = new ArrayList<>();
 
-//        Can move on up
+
+
+    int lasti,lastj;
+    ArrayList<State> flagMoves(int pi, int pj,int count) {
+        ArrayList<State> states = new ArrayList<>();
+
+//        Can move up
         for(int i=pi-1;i>=0;i--){
-            if(shipsArray[i][pj] == 0) {
-                moves.add(new Move(this,new Cell(pi,pj),new Cell(i,pj)));
+            if(shipsArray[i][pj] == 0){
+
+                State temp = new State(this, pi, pj, i, pj);
+                states.add(temp);
+
+
+//                System.out.println(pi+", "+pj+"can go UP");
 
             }else break;
-
         }
-
-        //Can move on down
+        //Can move down
         for(int i=pi+1;i<11;i++){
             if(shipsArray[i][pj] ==0) {
-                moves.add(new Move(this,new Cell(pi,pj),new Cell(i,pj)));
+                State temp = new State(this,pi,pj,i,pj);
+                states.add(temp);
+//                System.out.println(pi+", "+pj+"can go DOWN");
             }else break;
         }
         //Can move left
         for(int j=pj-1;j>=0;j--){
             if(shipsArray[pi][j] ==0) {
-                moves.add(new Move(this,new Cell(pi,pj),new Cell(pi,j)));
+                State temp = new State(this,pi,pj,pi,j);
+                states.add(temp);
+//                System.out.println(pi+", "+pj+"can go LEFT");
             }else break;
-
         }
         //Can move right
         for(int j=pj+1;j<11;j++){
             if(shipsArray[pi][j] ==0) {
-                moves.add(new Move(this,new Cell(pi,pj),new Cell(pi,j)));
+                State temp = new State(this,pi,pj,pi,j);
+                states.add(temp);
+//                System.out.println(pi+", "+pj+"can go RIGHT");
             }else break;
         }
 
-
-        return moves;
+        return states;
     }
+
+    ArrayList<State> goldMoves(int pi, int pj,int count) {
+        ArrayList<State> states = new ArrayList<>();
+
+//        Can move up
+        for(int i=pi-1;i>=0;i--){
+            if(shipsArray[i][pj] == 0){
+                State temp = new State(this, pi, pj, i, pj);
+                if(count ==0){
+                for(Gold g1: temp.goldPieces){
+                    if(!(g1.i == i && g1.j == pj)){
+                        states.addAll(temp.goldMoves(g1.i,g1.j,1));
+                    }
+                }}else {
+                    states.add(temp);
+                }
+
+
+//                System.out.println(pi+", "+pj+"can go UP");
+
+            }else break;
+        }
+        //Can move down
+        for(int i=pi+1;i<11;i++){
+            if(shipsArray[i][pj] ==0) {
+                State temp = new State(this,pi,pj,i,pj);
+                if(count ==0){
+                    for(Gold g1: temp.goldPieces){
+                        if(!(g1.i == i && g1.j == pj)){
+                            states.addAll(temp.goldMoves(g1.i,g1.j,1));
+                        }
+                    }}else {
+                    states.add(temp);
+                }
+//                System.out.println(pi+", "+pj+"can go DOWN");
+            }else break;
+        }
+        //Can move left
+        for(int j=pj-1;j>=0;j--){
+            if(shipsArray[pi][j] ==0) {
+                State temp = new State(this,pi,pj,pi,j);
+                if(count ==0){
+                    for(Gold g1: temp.goldPieces){
+                        if(!(g1.i == pi && g1.j == j)){
+                            states.addAll(temp.goldMoves(g1.i,g1.j,1));
+                        }
+                    }}else {
+                    states.add(temp);
+                }
+//                System.out.println(pi+", "+pj+"can go LEFT");
+            }else break;
+        }
+        //Can move right
+        for(int j=pj+1;j<11;j++){
+            if(shipsArray[pi][j] ==0) {
+                State temp = new State(this,pi,pj,pi,j);
+                if(count ==0){
+                    for(Gold g1: temp.goldPieces){
+                        if(!(g1.i == pi && g1.j == j)){
+                            states.addAll(temp.goldMoves(g1.i,g1.j,1));
+                        }
+                    }}else {
+                    states.add(temp);
+                }
+//                System.out.println(pi+", "+pj+"can go RIGHT");
+            }else break;
+        }
+
+        return states;
+    }
+
+    ArrayList<State> silverMoves(int pi, int pj,int count) {
+        ArrayList<State> states = new ArrayList<>();
+
+//        Can move up
+        for(int i=pi-1;i>=0;i--){
+            if(shipsArray[i][pj] == 0){
+                State temp = new State(this, pi, pj, i, pj);
+                if(count ==0){
+                    for(Silver s1: temp.silverPieces){
+                        if(!(s1.i == i && s1.j == pj)){
+                            states.addAll(temp.silverMoves(s1.i,s1.j,1));
+                        }
+                    }}else {
+                    states.add(temp);
+                }
+
+
+//                System.out.println(pi+", "+pj+"can go UP");
+
+            }else break;
+        }
+        //Can move down
+        for(int i=pi+1;i<11;i++){
+            if(shipsArray[i][pj] ==0) {
+                State temp = new State(this,pi,pj,i,pj);
+                if(count ==0){
+                    for(Silver s1: temp.silverPieces){
+                        if(!(s1.i == i && s1.j == pj)){
+                            states.addAll(temp.silverMoves(s1.i,s1.j,1));
+                        }
+                    }}else {
+                    states.add(temp);
+                }
+//                System.out.println(pi+", "+pj+"can go DOWN");
+            }else break;
+        }
+        //Can move left
+        for(int j=pj-1;j>=0;j--){
+            if(shipsArray[pi][j] ==0) {
+                State temp = new State(this,pi,pj,pi,j);
+                if(count ==0){
+                    for(Silver s1: temp.silverPieces){
+                        if(!(s1.i == pi && s1.j == j)){
+                            states.addAll(temp.silverMoves(s1.i,s1.j,1));
+                        }
+                    }}else {
+                    states.add(temp);
+                }
+//                System.out.println(pi+", "+pj+"can go LEFT");
+            }else break;
+        }
+        //Can move right
+        for(int j=pj+1;j<11;j++){
+            if(shipsArray[pi][j] ==0) {
+                State temp = new State(this,pi,pj,pi,j);
+                if(count ==0){
+                    for(Silver s1: temp.silverPieces){
+                        if(!(s1.i == pi && s1.j == j)){
+                            states.addAll(temp.silverMoves(s1.i,s1.j,1));
+                        }
+                    }}else {
+                    states.add(temp);
+                }
+//                System.out.println(pi+", "+pj+"can go RIGHT");
+            }else break;
+        }
+
+        return states;
+    }
+
+
 
     public boolean flagHasPath(){
         boolean has = false;
@@ -320,15 +503,16 @@ public class State {
     public void printArray(){
         for(int[] i: shipsArray){
             for(int j: i){
+                if(j>=0)
+                    System.out.print(" ");
                 System.out.print(j+" ");
+
             }
             System.out.println();
         }
     }
 
-    public Object clone() throws
-            CloneNotSupportedException
-    {
+    public Object clone() throws CloneNotSupportedException{
         return super.clone();
     }
 
