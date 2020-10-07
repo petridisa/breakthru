@@ -144,8 +144,6 @@ public class Board extends JFrame implements ActionListener {
                 player = r3.isSelected()?0:1;
                 startButton.setEnabled(false);
                 createAgent();
-                System.out.println("player = " + player);
-                System.out.println("agentPlayer = " + agentPlayer);
                 agentPlay();
 
 
@@ -246,8 +244,10 @@ public class Board extends JFrame implements ActionListener {
                     labels[i][j].setBackground(Color.lightGray);
                 else if(s.shipsArray[i][j] == 1)
                     labels[i][j].setBackground(Color.YELLOW);
-                else if(s.shipsArray[i][j] ==2)
+                else if(s.shipsArray[i][j] == 2)
                     labels[i][j].setBackground(gold);
+                else if(s.shipsArray[i][j] == 0)
+                    labels[i][j].setBackground(Color.white);
             }
         }
 
@@ -322,7 +322,8 @@ public class Board extends JFrame implements ActionListener {
 
                 picked = false;
                 if(s.flagCaptured()){
-                    JOptionPane.showMessageDialog(this, "GAME OVER");
+                    JOptionPane.showMessageDialog(this, "Game Over. Flag Captured. Silver Won!");
+                    System.exit(0);
                     return;
 
                 }
@@ -369,8 +370,13 @@ public class Board extends JFrame implements ActionListener {
         labels[di][dj].setBackground(labels[si][sj].getBackground());
         btn.setBackground(Color.white);
 
+        //Gold or Silver
+        String piece = "Gold";
+        if(s.shipsArray[si][sj] == -1)
+            piece = "Silver";
+
         //display the move on scroll
-        String newMove = mOc + chessNotation(si,sj) +" -> "+ chessNotation(di,dj);
+        String newMove = piece +" "+mOc + chessNotation(si,sj) +" -> "+ chessNotation(di,dj);
         newMove = moves.getText() +System.lineSeparator() + newMove ;
         moves.setText(newMove);
 

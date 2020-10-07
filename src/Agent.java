@@ -7,17 +7,20 @@ public class Agent {
     int player;
     State state;
     String playerString;
+    boolean maxPlayer;
 
     Agent(int player,State state){
         this.player = player;
         this.state = state;
-        if(player ==1) {
+        if(player == 1) {
             System.out.println("Agent plays gold");
             playerString = "gold";
+            maxPlayer = true;
         }
-        else if(player==-1) {
+        else if(player == -1) {
             System.out.println("Agent plays silver");
             playerString = "silver";
+            maxPlayer = false;
         }
 
 
@@ -30,7 +33,7 @@ public class Agent {
     State play(){
         System.out.println("Agent plays");
         //find all moves
-        System.out.println(minimax(state,1,true));
+        System.out.println(minimax(state,1,maxPlayer));
 
         goes.printArray();
 
@@ -48,9 +51,9 @@ public class Agent {
     }
 
     ArrayList<State> expandStates() {
-        System.out.println("Agent expand states");
+//        System.out.println("Agent expand states");
         ArrayList<State> states = state.expand(player);
-        System.out.println("Agent has "+states.size()+" moves");
+//        System.out.println("Agent has "+states.size()+" moves");
         return states;
 
 

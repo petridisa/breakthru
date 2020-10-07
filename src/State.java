@@ -204,6 +204,7 @@ public class State {
     }
 
     public void evaluate(){
+        //TODOs
         char end = endGame();
         if(end == 'g'){
             grade = 200;
@@ -232,8 +233,9 @@ public class State {
             if(shipsArray[flag.i+1][flag.j+1]==-1||shipsArray[flag.i-1][flag.j+1]==-1||shipsArray[flag.i-1][flag.j-1]==-1||shipsArray[flag.i+1][flag.j-1]==-1)
                 grade-=80;
             if(flagHasPath()){
-                grade+=80;
+                grade+=50;
             }
+            grade-=piecesInPath()*5;
 
 
 
@@ -251,9 +253,11 @@ public class State {
         ArrayList<State> states = new ArrayList<>();
         if(player == 1){
             //Expand flag moves
-            states.addAll(flagMoves(flag.i,flag.j,1));
+            states.addAll(flagMoves(flag.i,flag.j));
+            states.addAll(pieceCaptures(flag.i,flag.j));
             for(Gold g: goldPieces){
                 states.addAll(goldMoves(g.i,g.j,0));
+                states.addAll(pieceCaptures(g.i,g.j));
                 break;
 
 
@@ -262,16 +266,35 @@ public class State {
         else if(player == -1){
             for(Silver s: silverPieces){
                 states.addAll(silverMoves(s.i,s.j,0));
+                states.addAll(pieceCaptures(s.i,s.j));
             }
         }
 
         return states;
     }
 
+    ArrayList<State> pieceCaptures(int pi, int pj){
+        ArrayList<State> states = new ArrayList<>();
+        if(pi<10 && pj<10&&checkCapture(pi,pj,pi+1,pj+1)){
+            State temp = new State(this,pi,pj,pi+1,pj+1);
+            states.add(temp);
+        }
+        if(pi<10 && pj>0&&checkCapture(pi,pj,pi+1,pj-1)){
+            State temp = new State(this,pi,pj,pi+1,pj-1);
+            states.add(temp);
+        }
+        if(pi>0 && pj<10&&checkCapture(pi,pj,pi-1,pj+1)){
+            State temp = new State(this,pi,pj,pi-1,pj+1);
+            states.add(temp);
+        }
+        if(pi>0 && pj>0&&checkCapture(pi,pj,pi-1,pj-1)){
+            State temp = new State(this,pi,pj,pi-1,pj-1);
+            states.add(temp);
+        }
+        return states;
+    }
 
-
-    int lasti,lastj;
-    ArrayList<State> flagMoves(int pi, int pj,int count) {
+    ArrayList<State> flagMoves(int pi, int pj) {
         ArrayList<State> states = new ArrayList<>();
 
 //        Can move up
@@ -454,8 +477,6 @@ public class State {
         return states;
     }
 
-
-
     public boolean flagHasPath(){
         boolean has = false;
         //Flag has up path
@@ -500,12 +521,61 @@ public class State {
         return has;
     }
 
+    public int piecesInPath(){
+        int pieces = 0;
+        //Flag has up path
+        for(int i=flag.i-1;i>=0;i--){
+            if(shipsArray[i][flag.j] != 0) {
+                pieces++;
+            }
+        }
+
+        //Flag has down path
+        for(int i=flag.i+1;i<11;i++){
+            if(shipsArray[i][flag.j] != 0) {
+                pieces++;
+            }
+
+        }
+        //Flag has left path
+        for(int j=flag.j-1;j>=0;j--){
+            if(shipsArray[flag.i][j] !=0) {
+                pieces++;
+            }
+
+        }
+        //Flag has right path
+        for(int j=flag.j+1;j<11;j++){
+            if(shipsArray[flag.i][j] !=0) {
+                pieces++;
+            }
+        }
+
+        return pieces;
+    }
+
+//    public void printArray(){
+//        for(int[] i: shipsArray){
+//            for(int j: i){
+//                if(j>=0)
+//                    System.out.print(" ");
+//                System.out.print(j+" ");
+//
+//            }
+//            System.out.println();
+//        }
+//    }
     public void printArray(){
         for(int[] i: shipsArray){
             for(int j: i){
-                if(j>=0)
-                    System.out.print(" ");
-                System.out.print(j+" ");
+                if(j==0)
+                    System.out.print("   ");
+                else if(j==2)
+                    System.out.print(" F ");
+                else if(j==1)
+                    System.out.print(" G ");
+                else if(j==-1)
+                    System.out.print(" S ");
 
             }
             System.out.println();
