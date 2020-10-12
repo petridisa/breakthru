@@ -565,21 +565,32 @@ public class State {
 //            System.out.println();
 //        }
 //    }
-    public void printArray(){
+    public String printArray(){
+        String s = "";
         for(int[] i: shipsArray){
             for(int j: i){
-                if(j==0)
+                if(j==0) {
                     System.out.print("   ");
-                else if(j==2)
+                    s+="     ";
+                }
+                else if(j==2) {
                     System.out.print(" F ");
-                else if(j==1)
+                    s+="  F  ";
+                }
+                else if(j==1) {
                     System.out.print(" G ");
-                else if(j==-1)
+                    s+="  G  ";
+                }
+                else if(j==-1) {
                     System.out.print(" S ");
+                    s+="  S  ";
+                }
 
             }
             System.out.println();
+            s+="\n";
         }
+        return s;
     }
 
     public Object clone() throws CloneNotSupportedException{

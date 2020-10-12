@@ -12,13 +12,13 @@ import java.awt.event.WindowEvent;
 public class Board extends JFrame implements ActionListener {
     Container contentPane;
     GridLayout gridLayout;
-    JPanel panel, panel2;
+    JPanel panel;
     int delay,player=-1,agentPlayer=-1;
     Timer timerGold, timerSilver;
     Color gold = new Color(212,175,55);
     String movesString;
     boolean picked;
-    JTextArea moves;
+    JTextArea moves,moveAI;
     State s;
     Component frame;
     String winner;
@@ -47,6 +47,16 @@ public class Board extends JFrame implements ActionListener {
         putLabels();
         setMenu();
 
+        moveAI = new JTextArea();
+        moveAI.setEditable(false);
+        moveAI.setBackground(Color.white);
+        moveAI.setVisible(true);
+        JLabel moveAITitle = new JLabel("AGENT'S MOVE", SwingConstants.CENTER);
+        moveAITitle.setBounds(720,30,250,20);
+        moveAITitle.setVisible(true);
+        add(moveAITitle);
+        moveAI.setBounds(720,50,250,250);
+        add(moveAI);
 
         moves = new JTextArea("Players Moves:");
         moves.setPreferredSize(new Dimension(200,1000));
@@ -155,6 +165,7 @@ public class Board extends JFrame implements ActionListener {
     private void agentPlay() {
         if(player == 0 && agentPlayer ==1 || player == 1 && agentPlayer ==-1) {
             State agentsMove = agent.play();
+            moveAI.setText(agentsMove.printArray());
         }
 
     }
