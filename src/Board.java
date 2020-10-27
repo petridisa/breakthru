@@ -7,12 +7,16 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 
 public class Board extends JFrame implements ActionListener {
     Container contentPane;
     GridLayout gridLayout;
-    JPanel panel;
+    JPanel panel, panelH, panelV;
     int delay,player=-1,agentPlayer=-1;
     Timer timerGold, timerSilver;
     Color gold = new Color(212,175,55);
@@ -33,7 +37,8 @@ public class Board extends JFrame implements ActionListener {
         setTitle("Breakthru");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         gridLayout = new GridLayout(11,11);
-        setSize(1000,650);
+        GridLayout gridH = new GridLayout(1,11), gridV = new GridLayout(11,1);
+        setSize(1000,700);
         panel = new JPanel(gridLayout);
         panel.setBounds(30,30,400,400);
         panel.setVisible(true);
@@ -41,6 +46,18 @@ public class Board extends JFrame implements ActionListener {
         frame = this;
         winner = "";
 
+        setLayout(null);
+        setLocationRelativeTo(null);
+
+        panelH = new JPanel(gridH);
+        panelV = new JPanel(gridV);
+        panelV.setBounds(10,30,20,400);
+        panelH.setBounds(42,430,400,20);
+        panelH.setVisible(true);
+        panelV.setVisible(true);
+        add(panelH);
+        add(panelV);
+        addChessNotation();
         setLayout(null);
         setLocationRelativeTo(null);
 
@@ -78,6 +95,8 @@ public class Board extends JFrame implements ActionListener {
         addRadioButtons();
 
         s = new State();
+        s.evaluate();
+        System.out.println(s.grade);
         loadState(s);
 //        if(checkEndgame(new State())) System.out.println("endgame");
 
@@ -115,16 +134,16 @@ public class Board extends JFrame implements ActionListener {
         JLabel chooseTitle = new JLabel("Choose Player");
         JLabel firstTitle = new JLabel("Which player plays first");
 
-        chooseTitle.setBounds(150,440,200,20);
-        firstTitle.setBounds(150,530,200,20);
+        chooseTitle.setBounds(150,480,200,20);
+        firstTitle.setBounds(150,570,200,20);
         JRadioButton r1 = new JRadioButton("A) Gold");
         JRadioButton r2 = new JRadioButton("B) Silver");
         JRadioButton r3 = new JRadioButton("A) Gold");
         JRadioButton r4 = new JRadioButton("B) Silver");
-        r1.setBounds(150,460,200,20);
-        r2.setBounds(150,480,200,20);
-        r3.setBounds(150,550,200,20);
-        r4.setBounds(150,570,200,20);
+        r1.setBounds(150,500,200,20);
+        r2.setBounds(150,520,200,20);
+        r3.setBounds(150,590,200,20);
+        r4.setBounds(150,610,200,20);
 
         ButtonGroup bgPLayer = new ButtonGroup();
         ButtonGroup bgFirst = new ButtonGroup();
@@ -138,7 +157,7 @@ public class Board extends JFrame implements ActionListener {
         add(chooseTitle);add(firstTitle);
 
         JButton startButton = new JButton("START GAME");
-        startButton.setBounds(350,430,150,80);
+        startButton.setBounds(350,470,150,80);
         startButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -147,10 +166,14 @@ public class Board extends JFrame implements ActionListener {
 //                player = JOptionPane.showOptionDialog(frame,"Choose which player plays first",
 //                        "First Player",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE,null,new Object[]{"Gold Player","Silver Player"},
 //                        null);
-                if(r1.isSelected())
+                if(r1.isSelected()) {
+                    s.setPlayer(true);
                     agentPlayer = 1;
-                else if(r2.isSelected())
+                }
+                else if(r2.isSelected()) {
+                    s.setPlayer(false);
                     agentPlayer = -1;
+                }
                 player = r3.isSelected()?0:1;
                 startButton.setEnabled(false);
                 createAgent();
@@ -164,14 +187,56 @@ public class Board extends JFrame implements ActionListener {
 
     private void agentPlay() {
         if(player == 0 && agentPlayer ==1 || player == 1 && agentPlayer ==-1) {
-            State agentsMove = agent.play();
-            moveAI.setText(agentsMove.printArray());
+            now = System.currentTimeMillis();
+            s.printArray();
+            State agentsMove = agent.play(s);
+            agentsMove.printArray();
+//            loadState(s);
+            moveAI.setText(agentsMove.arrayToString());
+            long timeLong = (System.currentTimeMillis()-now);
+            int timePassed = (int)(timeLong/1000);
+            System.out.println(timePassed);
+            if(player==0 && !counterGold.isZero()){
+                counterGold.decrease(timePassed);
+                goldTLabel.setText(counterGold.toString());
+            }
+            if(player==1 && !counterSilver.isZero()){
+                counterSilver.decrease(timePassed);
+                silverTLabel.setText(counterSilver.toString());
+            }
+//            player = 1 - player;
         }
 
     }
 
+
     private void createAgent() {
         agent = new Agent(agentPlayer,s);
+    }
+    long now;
+    Counter counterGold;
+    Counter counterSilver;
+    JLabel goldTLabel;
+    JLabel silverTLabel;
+
+    private void exportFile(String s,String winner){
+        String agent = "";
+        if(agentPlayer == 1){
+            agent = "Gold";
+        }else{
+            agent = "Silver";
+        }
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm");
+        LocalDateTime now = LocalDateTime.now();
+        try{
+            PrintWriter printWriter = new PrintWriter("Game's moves at "+ dtf.format(now) +
+                    " with AI as "+ agent);
+             printWriter.println(s);
+            printWriter.close();
+        }
+        catch (FileNotFoundException e){
+
+        }
     }
 
     private void addTimers() {
@@ -179,15 +244,14 @@ public class Board extends JFrame implements ActionListener {
         delay = 1000;
         int n = -1;
 
-
         //GOLD PLAYER
         {
-            Counter counterGold = new Counter(10);
-            JLabel goldTLabel = new JLabel(counterGold.toString(), SwingConstants.CENTER);
-            goldTLabel.setBounds(30, 480, 110, 20);
+            counterGold = new Counter(10);
+            goldTLabel = new JLabel(counterGold.toString(), SwingConstants.CENTER);
+            goldTLabel.setBounds(30, 520, 110, 20);
             add(goldTLabel);
             JLabel goldTitle = new JLabel("GOLD'S TIMER", SwingConstants.CENTER);
-            goldTitle.setBounds(30,460,110,20);
+            goldTitle.setBounds(30,500,110,20);
             add(goldTitle);
             timerGold = new Timer(delay, new ActionListener() {
                 @Override
@@ -199,6 +263,8 @@ public class Board extends JFrame implements ActionListener {
                         } else {
                             JOptionPane.showMessageDialog(null, "Game over for Gold Player");
                             timerGold.stop();
+                            String s = moves.getText();
+                            exportFile(s,"silver");
                         }
                     }
                 }
@@ -208,12 +274,12 @@ public class Board extends JFrame implements ActionListener {
 
         //SILVER PLAYER
         {
-            Counter counterSilver = new Counter(10);
-            JLabel silverTLabel = new JLabel(counterSilver.toString(), SwingConstants.CENTER);
-            silverTLabel.setBounds(30, 550, 110, 20);
+            counterSilver = new Counter(10);
+            silverTLabel = new JLabel(counterSilver.toString(), SwingConstants.CENTER);
+            silverTLabel.setBounds(30, 590, 110, 20);
             add(silverTLabel);
             JLabel silverTitle = new JLabel("SILVER'S TIMER", SwingConstants.CENTER);
-            silverTitle.setBounds(30,530,110,20);
+            silverTitle.setBounds(30,570,110,20);
             add(silverTitle);
             timerSilver = new Timer(delay, new ActionListener() {
                 @Override
@@ -225,6 +291,8 @@ public class Board extends JFrame implements ActionListener {
                         } else {
                             JOptionPane.showMessageDialog(null, "Game over for Silver Player");
                             timerSilver.stop();
+                            String s = moves.getText();
+                            exportFile(s, "gold");
                         }
                     }
                 }
@@ -334,6 +402,8 @@ public class Board extends JFrame implements ActionListener {
                 picked = false;
                 if(s.flagCaptured()){
                     JOptionPane.showMessageDialog(this, "Game Over. Flag Captured. Silver Won!");
+                    String s = moves.getText();
+                    exportFile(s, "silver");
                     System.exit(0);
                     return;
 
@@ -346,6 +416,8 @@ public class Board extends JFrame implements ActionListener {
         }
         if(checkEndgame(s)){
             JOptionPane.showMessageDialog(this,"The game ended "+winner+" won!");
+            String s = moves.getText();
+            exportFile(s,winner);
         }
     }
 
@@ -404,10 +476,10 @@ public class Board extends JFrame implements ActionListener {
         }
         if(movesRemaining==0){
             player = 1-player;
-            agentPlay();
             movesRemaining=2;
             s.evaluate();
-//            System.out.println(s.getGrade());
+            System.out.println(s.getGrade());
+            agentPlay();
         }
 
         return true;
@@ -420,6 +492,21 @@ public class Board extends JFrame implements ActionListener {
         k = k+(11-i)+"";
 
         return k;
+    }
+
+    Label notationH[], notationV[];
+    public void addChessNotation() {
+        notationH = new Label[11];
+        notationV = new Label[11];
+        for (int i = 0; i < 11; i++) {
+            notationH[i] = new Label();
+            notationH[i].setText((char) (i + 65) + "");
+            panelH.add(notationH[i]);
+            notationV[i] = new Label();
+            notationV[i].setText((11 - i) + "");
+            panelV.add(notationV[i]);
+
+        }
     }
 
 

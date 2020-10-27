@@ -12,11 +12,9 @@ public class State {
     int grade;
     ArrayList<Gold> goldPieces;
     ArrayList<Silver> silverPieces;
-    static int number;
-    int id;
+    static boolean gold;
 
-
-
+    int[][] lastArray = new int[11][11];
     int[][] shipsArray;
     //0 is empty
     //-1 is silver
@@ -42,7 +40,6 @@ public class State {
         this.shipsArray = shipsArray;
     }
     public State(State pre, int a, int b, int c, int d){
-        id = number++;
         shipsArray = new int[11][11];
         for(int i=0;i<11;i++){
             for(int j=0;j<11;j++){
@@ -64,7 +61,6 @@ public class State {
     }
 
     public State(){
-        id = number++;
         shipsArray = initialState;
         goldShips = 12;
         silverShips = 20;
@@ -90,7 +86,9 @@ public class State {
     }
 
     public void update(int a, int b, int c, int d){
-
+        for(int i=0;i<11;i++){
+            System.arraycopy(shipsArray[i], 0, lastArray[i], 0, 11);
+        }
         if(shipsArray[a][b]==2){
             flag.move(c,d);
         }
@@ -123,6 +121,7 @@ public class State {
                     return goldPieces.indexOf(g);
                 }
             }
+
         }
         if(i==-1){
             for(Silver s:silverPieces){
@@ -153,8 +152,9 @@ public class State {
     }
 
     private boolean draw() {
-        //TODO
-        //check if player has no moves
+        if(silverShips ==0 && goldShips ==0){
+            return true;
+        }
         return false;
     }
 
@@ -219,29 +219,100 @@ public class State {
             return;
         }
         else{
-            grade+=max(abs(flag.i-5),abs(flag.j-5))*10;
-            grade+= goldShips*5;
-            grade-= silverShips*3;
-            if(shipsArray[flag.i-1][flag.j+1]==1)
-                grade+=5;
-            if(shipsArray[flag.i-1][flag.j-1]==1)
-                grade+=5;
-            if(shipsArray[flag.i+1][flag.j+1]==1)
-                grade+=5;
-            if(shipsArray[flag.i+1][flag.j-1]==1)
-                grade+=5;
-            if(shipsArray[flag.i+1][flag.j+1]==-1||shipsArray[flag.i-1][flag.j+1]==-1||shipsArray[flag.i-1][flag.j-1]==-1||shipsArray[flag.i+1][flag.j-1]==-1)
-                grade-=80;
+            int g1 = 10, g2 = 15, g3 = 20, g4 = 20, g5 = 15, g6 = 5, g7 = 5, g8 = 10, g9 = 0, g10 = 0;
+            int s1 = 10, s2 = 20, s3 = 20, s4 = 25, s5 = 5, s6 = 5, s7 = 5, s8 = 5, s9 = 0, s10 = 0;
+
+            int f1 = 0, f2 = 0, f3 = 0, f4 = 0 , f5 = 0, f6 = 0, f7 = 0, f8 = 0, f9 = 0, f10 =0;
+
+
+
+            f1 = max(abs(flag.i-5),abs(flag.j-5))*20;
+            f2 = flagProtected();
+            f3 = flagThreatened();
             if(flagHasPath()){
-                grade+=50;
+                f4 = 100;
             }
-            grade-=piecesInPath()*5;
+            f5 = (int)(goldShips*8.3) - silverShips*(5);
+            f6 = -piecesInPath();
+            f7 = goldDistance();
+            f8 = -silverEverywhere();
+            f9 = -silverBlock();
 
 
 
-
+            if(gold){
+                if(f2>0)f1=0;
+                grade = g1*f1 + g2*f2 + g3*f3 + g4*f4 + g5*f5 + g6*f6 + g7*f7 +  g8*f8 + g9*f9;
+                if(f2!=0)grade-=g1*f1;
+            }
+            else
+                grade = s1*f1 + s2*f2 + s3*f3 + s4*f4 + s5*f5 + s6*f6 + s7*f7 +s8*f8 + s9*f9;
         }
+        grade = grade /100;
+    }
 
+    private int silverBlock() {
+        int sB = 0;
+        if(flag.i<10 && shipsArray[flag.i+1][flag.j]==-1)
+            sB+=25;
+        if(flag.j>0  && shipsArray[flag.i][flag.j-1]==-1)
+            sB+=25;
+        if(flag.j<10 && shipsArray[flag.i][flag.j+1]==-1)
+            sB+=25;
+        if(flag.i>0&& shipsArray[flag.i-1][flag.j]==-1)
+            sB+=25;
+        return sB;
+    }
+
+    private int goldDistance() {
+        int gR = 0;
+        for(Gold g: goldPieces){
+            if(abs(g.i-flag.i)+abs(g.j-flag.j)<=3){
+                gR += 9;
+            }
+        }
+        return gR;
+    }
+
+    public int flagProtected(){
+        int fP=0;
+        if(flag.i>0  && flag.j<10 &&shipsArray[flag.i-1][flag.j+1]==1)
+            fP+=25;
+        if(flag.i>0  && flag.j>0 && shipsArray[flag.i-1][flag.j-1]==1)
+            fP+=25;
+        if(flag.i<10 && flag.j<10 &&shipsArray[flag.i+1][flag.j+1]==1)
+            fP+=25;
+        if(flag.i<10 && flag.j>0  && shipsArray[flag.i+1][flag.j-1]==1)
+            fP+=25;
+        return fP;
+    }
+    public int flagThreatened(){
+        int fT = 0;
+        int hD = hasDiagonial(flag.i, flag.j, -1);
+        if(hD>0){
+            fT=-50;
+            if (hasDiagonial(flag.i + 1, flag.j + 1, 1)>0 && hD ==1) {
+                fT = -100;
+            }
+            if (hasDiagonial(flag.i + 1, flag.j - 1, 1)>0 && hD ==2) {
+                fT = -100;
+            }
+            if (hasDiagonial(flag.i - 1, flag.j + 1, 1)>0 && hD ==3) {
+                fT = -100;
+            }
+            if (hasDiagonial(flag.i - 1, flag.j - 1, 1)>0 && hD ==4) {
+                fT = -100;
+            }
+        }
+        return fT;
+    }
+
+    public int hasDiagonial(int i, int j, int player){
+       if(i<10 && j<10 && shipsArray[i+1][j+1]==player)return 1;
+       if(i<10 && j>0  && shipsArray[i+1][j-1]==player)return 2;
+       if(i>0  && j<10 && shipsArray[i-1][j+1]==player)return 3;
+       if(i>0  && j>0  && shipsArray[i-1][j-1]==player)return 4;
+       return 0;
     }
 
     int getGrade(){
@@ -258,8 +329,6 @@ public class State {
             for(Gold g: goldPieces){
                 states.addAll(goldMoves(g.i,g.j,0));
                 states.addAll(pieceCaptures(g.i,g.j));
-                break;
-
 
             }
         }
@@ -521,50 +590,60 @@ public class State {
         return has;
     }
 
+    private int silverEverywhere() {
+        int smth = 0;
+        for (int i = 0; i < 11; i++) {
+            for (int j = 0; j < 11; j++) {
+                if (shipsArray[i][j] == -1) {
+                    smth+=5;
+                    j = 11;
+                }
+            }
+        }
+        for (int i = 0; i < 11; i++) {
+            for (int j = 0; j < 11; j++) {
+                if (shipsArray[j][i] == -1) {
+                    smth+=5;
+                    j = 11;
+                }
+            }
+        }
+        return smth;
+    }
+
     public int piecesInPath(){
         int pieces = 0;
         //Flag has up path
         for(int i=flag.i-1;i>=0;i--){
             if(shipsArray[i][flag.j] != 0) {
-                pieces++;
+                pieces+=5;
             }
         }
 
         //Flag has down path
         for(int i=flag.i+1;i<11;i++){
             if(shipsArray[i][flag.j] != 0) {
-                pieces++;
+                pieces+=5;
             }
 
         }
         //Flag has left path
         for(int j=flag.j-1;j>=0;j--){
             if(shipsArray[flag.i][j] !=0) {
-                pieces++;
+                pieces+=5;
             }
 
         }
         //Flag has right path
         for(int j=flag.j+1;j<11;j++){
             if(shipsArray[flag.i][j] !=0) {
-                pieces++;
+                pieces+=5;
             }
         }
 
         return pieces;
     }
 
-//    public void printArray(){
-//        for(int[] i: shipsArray){
-//            for(int j: i){
-//                if(j>=0)
-//                    System.out.print(" ");
-//                System.out.print(j+" ");
-//
-//            }
-//            System.out.println();
-//        }
-//    }
     public String printArray(){
         String s = "";
         for(int[] i: shipsArray){
@@ -597,6 +676,60 @@ public class State {
         return super.clone();
     }
 
+    public void printFs() {
+        int f1 = 0, f2 = 0, f3 = 0, f4 = 0 , f5 = 0, f6 = 0, f7 = 0, f8 = 0, f9 = 0, f10 =0;
+        f4 = max(abs(flag.i-5),abs(flag.j-5))*10;
+        f3 = goldShips*5 - silverShips*3;
+        f3 = f3*2;
+        f2 = flagThreatened();
+        if(flagHasPath()){
+            f1 = 100;
+        }
+        f5 = flagProtected();
+        System.out.println("f1 = " + f1);
+        System.out.println("f2 = " + f2);
+        System.out.println("f3 = " + f3);
+        System.out.println("f4 = " + f4);
+        System.out.println("f5 = " + f5);
+    }
+
+    public String arrayToString(){
+        String s = "";
+        for(int[] i: shipsArray){
+            for(int j: i){
+                if(j==0) {
+                    s+="  _  ";
+                }
+                else if(j==2) {
+                    s+="  F  ";
+                }
+                else if(j==1) {
+                    s+="  G  ";
+                }
+                else if(j==-1) {
+                    s+="  S  ";
+                }
+
+            }
+            s+="\n";
+        }
+        return s;
+    }
+
+    public void setPlayer(boolean gold){
+        this.gold = gold;
+    }
+
+    public void invert(State s){
+        for(int i=0;i<11;i++){
+            for(int j=0;j<11;j++){
+                shipsArray[i][j] = s.shipsArray[i][j];
+            }
+        }
+        goldShips = s.goldShips;
+        silverShips = s.silverShips;
+
+    }
 }
 
 

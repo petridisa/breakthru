@@ -18,6 +18,11 @@ public class Counter {
             minutes--;
         }
     }
+    public void decrease(int diff){
+        for(int i=diff;i>0;i--){
+            decrease();
+        }
+    }
 
     public void increase(){
         this.seconds++;
